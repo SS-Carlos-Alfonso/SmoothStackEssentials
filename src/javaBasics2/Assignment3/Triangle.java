@@ -31,23 +31,12 @@ public class Triangle implements Shape {
 
 
 	public static void display() {
-		
-        
-        for (int i = 1; i <= (int)base; i++) {
-            for (int j = (int)base; j >= i; j--) {
-                System.out.print(" ");
-            }
-            for (int j = 1; j <= i; j++) {
-                System.out.print("* ");
-            }
-            System.out.println();
-        }
+		System.out.println("Total Area is : " + calculateArea());
 
 	}
 	
 	public static void main(String args[]) {
 		
-		System.out.println("Total Area is : " + calculateArea());
 		display();
 	
 	}
