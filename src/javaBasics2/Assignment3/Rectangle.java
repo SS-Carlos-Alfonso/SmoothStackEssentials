@@ -32,28 +32,11 @@ public class Rectangle implements Shape {
 
 	
 	public static void display() {
-		for(int i = 0; i < length; i++) {
-			for(int j = 0; j < width; j++) {
-				if (i == 0 || i ==length-1) {
-					System.out.print(" - ");
-					if(j == width - 1) {
-						System.out.println();
-					}
-				}else if(j == 0){
-					System.out.print("|");
-				}else if(j == width-1){
-					System.out.print("|\n");
-				}else {
-					System.out.print("    ");
-				}
-			}
-		}
-
+		System.out.println("Total Area is : " + calculateArea());
 	}
 	
 	public static void main(String args[]) {
 	
-		System.out.println("Total Area is : " + calculateArea());
 		display();
 	
 	}
