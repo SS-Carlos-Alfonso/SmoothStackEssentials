@@ -1,0 +1,32 @@
+ Which class would you use to store your birthday in years, months, days, seconds, and nanoseconds?
+
+	I would choose to use the LocalDateTime class. Using the LocalDate time we can store our birthdate as year-month-day-hour-minute-second. In order to change
+	the date we can use the Period class to transfer the data into years months and days.
+
+ Given a random date, how would you find the date of the previous Thursday?
+ 
+ 	You would use the previous method of the TemporalAdjuster class. date.with(TemporalAdjuster.previous(DayOfWeek.THURSDAY)); 
+ 
+
+ What is the difference between a ZoneId and a ZoneOffset?
+ 
+ 	Both of them track an offset from UTC time but the difference is that the ZoneOffset class only
+ 	tracks from the absolute offset from UTC.
+ 
+
+ How would you convert an Instant to a ZonedDateTime? How would you convert a ZonedDateTime to an Instant?
+    
+    ZonedDateTime zonedateTime = ZonedDateTime.ofInstant(Instant.now(), ZoneId.systemDefault());
+    
+    
+ Write an example that, for a given year, reports the length of each month within that year.
+
+	You will find the code in the MonthsInYear.java file
+
+ Write an example that, for a given month of the current year, lists all of the Mondays in that month.
+
+	You will find the code in the ListMondays.java file
+	
+ Write an example that tests whether a given date occurs on Friday the 13th.
+ 
+ 	You will find the code in the Friday13.java file
