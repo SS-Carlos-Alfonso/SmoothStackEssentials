@@ -11,7 +11,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
 
-public class Administrator implements Serializable {
+public class Administrator {
 	public static volatile Administrator ASoleInstance;
 
 	private Administrator() {
@@ -36,8 +36,8 @@ public class Administrator implements Serializable {
 	protected Administrator readResolve() {
 		return getInstance();
 	}
-	
-	//Functions to display CRUD menus
+
+	// Functions to display CRUD menus
 	public int CRUDbooks() {
 		System.out.println("You have selected the Books table to perform operations");
 		System.out.println("Which operation would you like to perform?");
@@ -64,6 +64,7 @@ public class Administrator implements Serializable {
 
 		return CRUD_Books_Choice;
 	}
+
 	public int CRUDGenre() {
 
 		System.out.println("You have selected the Genre table to perform operations");
@@ -92,6 +93,7 @@ public class Administrator implements Serializable {
 		return CRUD_genre_Choice;
 
 	}
+
 	public int CRUDBranches() {
 
 		System.out.println("You have selected the branch table to perform operations");
@@ -120,6 +122,7 @@ public class Administrator implements Serializable {
 		return CRUD_branch_Choice;
 
 	}
+
 	public int CRUDBorrower() {
 
 		System.out.println("You have selected the borrower table to perform operations");
@@ -148,6 +151,7 @@ public class Administrator implements Serializable {
 		return CRUD_branch_Choice;
 
 	}
+
 	public int CRUDPublish() {
 
 		System.out.println("You have selected the Publisher table to perform operations");
@@ -176,6 +180,7 @@ public class Administrator implements Serializable {
 		return CRUD_publish_Choice;
 
 	}
+
 	public int displayChoices() {
 		System.out.println("Welcome Administrator: Please choose an option:");
 		System.out.println("1: Add/Update/Delete/Read Books and Authors");
@@ -205,7 +210,7 @@ public class Administrator implements Serializable {
 		return adminChoice;
 	}
 
-	//Methods to create new entries
+	// Methods to create new entries
 	public int addGenre(String newGenre, Connection conn) throws SQLException {
 		String query = "INSERT INTO tbl_genre (genre_name) VALUES (?); ";
 		PreparedStatement stmt = conn.prepareStatement(query);
@@ -215,14 +220,16 @@ public class Administrator implements Serializable {
 
 		return 0;
 	}
+
 	public static void addAuthor(String authorName, Connection conn) throws SQLException {
-		String query5 = "INSERT INTO tbl_author (authorName) VALUES (?)";
-		PreparedStatement stmt5 = conn.prepareStatement(query5);
-		stmt5.setString(1, authorName);
-		stmt5.executeUpdate();
+		String query = "INSERT INTO tbl_author (authorName) VALUES (?)";
+		PreparedStatement stmt = conn.prepareStatement(query);
+		stmt.setString(1, authorName);
+		stmt.executeUpdate();
 		System.out.println("Sucessfully added author to table");
 	}
-	public int addPublisher(String name, String address, String phoneNumber, Connection conn) throws SQLException {
+
+	public static int addPublisher(String name, String address, String phoneNumber, Connection conn) throws SQLException {
 		String query = "INSERT INTO tbl_publisher (publisherName, publisherAddress, publisherPhone) VALUES (?,?,?); ";
 		PreparedStatement stmt = conn.prepareStatement(query);
 		stmt.setString(1, name);
@@ -233,18 +240,55 @@ public class Administrator implements Serializable {
 
 		return 0;
 	}
-	public int addBranch(String name, String address, Connection conn) throws SQLException {
 
-		String query = "INSERT INTO tbl_library_branch (branchName, branchAddress) VALUES (?,?); ";
+	public static int addBranch(String name, String address, Connection conn) throws SQLException {
+
+		
+		String query = "SELECT bookId FROM tbl_book";
 		PreparedStatement stmt = conn.prepareStatement(query);
+		ResultSet rs = stmt.executeQuery();
+		
+		ArrayList<Integer> bookIds = new ArrayList<Integer>();
+		
+		while(rs.next()) {
+			bookIds.add(rs.getInt(1));
+		}
+
+		
+		
+		query = "INSERT INTO tbl_library_branch (branchName, branchAddress) VALUES (?,?); ";
+		stmt = conn.prepareStatement(query);
 		stmt.setString(1, name);
 		stmt.setString(2, address);
 		stmt.executeUpdate();
 		System.out.println("New branch successfully added to tbl_library_branch");
 
+
+		
+		query = "SELECT MAX(branchId) from tbl_library_branch";
+		PreparedStatement stmt2 = conn.prepareStatement(query);
+		rs = stmt2.executeQuery();
+		
+		int branchId = 0;
+		while(rs.next()) {
+			branchId = rs.getInt(1);
+		}
+		
+		
+		for(int i = 0; i < bookIds.size(); i++) {
+		query = "INSERT INTO tbl_book_copies (bookId, branchId, noOfCopies) VALUES (?,?,5); ";
+		stmt = conn.prepareStatement(query);
+		stmt.setInt(1, bookIds.get(i));
+		stmt.setInt(2, branchId);
+		stmt.executeUpdate();
+		System.out.println("New book successfully added to tbl_book_copies");
+		}
+		
+		
 		return 0;
 	}
-	public void addBorrower(String name, String address, String phoneNumber, Connection conn) throws SQLException {
+
+	public static void addBorrower(String name, String address, String phoneNumber, Connection conn) throws SQLException {
 
 		String query = "INSERT INTO tbl_borrower (name, address, phone) VALUES (?,?,?); ";
 		PreparedStatement stmt = conn.prepareStatement(query);
@@ -255,7 +299,10 @@ public class Administrator implements Serializable {
 		System.out.println("New borrower successfully added to tbl_library_branch");
 
 	}
-	public void addBook(String title, int authorId, int genreId, int publishId, Connection conn) throws SQLException {
+
+	public static void addBook(String title, int authorId, int genreId, int publishId, Connection conn) throws SQLException {
+
+		ArrayList<Integer> branchIds = new ArrayList<Integer>();
 
 		System.out.println("*******ADDING BOOK TO TABLE*************");
 
@@ -266,10 +313,10 @@ public class Administrator implements Serializable {
 		stmt.executeUpdate();
 		System.out.println("Book succesfully added to tbl_book");
 
-		String query2 = "SELECT bookId from tbl_book WHERE title = ?;";
-		PreparedStatement stmt2 = conn.prepareStatement(query2);
-		stmt2.setString(1, title);
-		ResultSet rs = stmt2.executeQuery();
+		query = "SELECT bookId from tbl_book WHERE title = ?;";
+		stmt = conn.prepareStatement(query);
+		stmt.setString(1, title);
+		ResultSet rs = stmt.executeQuery();
 
 		int bookId = 0;
 		while (rs.next()) {
@@ -277,57 +324,51 @@ public class Administrator implements Serializable {
 		}
 		System.out.println("BookId generated and recieved");
 
-		String query3 = "INSERT INTO tbl_book_authors (bookId,authorId) VALUES (?,?);";
-		PreparedStatement stmt3 = conn.prepareStatement(query3);
-		stmt3.setInt(1, bookId);
-		stmt3.setInt(2, authorId);
-		stmt3.executeUpdate();
+		query = "INSERT INTO tbl_book_authors (bookId,authorId) VALUES (?,?);";
+		stmt = conn.prepareStatement(query);
+		stmt.setInt(1, bookId);
+		stmt.setInt(2, authorId);
+		stmt.executeUpdate();
 		System.out.println("Book connected to author via tbl_book_authors");
 
+		query = "SELECT branchId FROM tbl_library_branch";
+		stmt = conn.prepareStatement(query);
+		rs = stmt.executeQuery();
 
-
-		ArrayList<Integer> branchIds = new ArrayList<Integer>();
-		
-		query3 = "SELECT branchId FROM tbl_library_branch";
-		stmt3 = conn.prepareStatement(query3);
-		rs = stmt3.executeQuery();
-		
-		
-		while(rs.next()) {
+		while (rs.next()) {
 			branchIds.add(rs.getInt(1));
 		}
-		
-		
-		
+
 		int i = 1;
-		int numBranches = getNumBranches(conn);
 		while (i < branchIds.size() + 1) {
-			String query4 = "INSERT INTO tbl_book_copies (bookId,branchId,noOfCopies) VALUES (?,?,5);";
-			PreparedStatement stmt4 = conn.prepareStatement(query4);
-			stmt4.setInt(1, bookId);
-			stmt4.setInt(2, branchIds.get(i-1));
-			stmt4.executeUpdate();
+			query = "INSERT INTO tbl_book_copies (bookId,branchId,noOfCopies) VALUES (?,?,5);";
+			stmt = conn.prepareStatement(query);
+			stmt.setInt(1, bookId);
+			stmt.setInt(2, branchIds.get(i - 1));
+			stmt.executeUpdate();
 			System.out.println("Automatically added 5 copies to branchId" + i);
 			i++;
 		}
 
-		String query5 = "INSERT INTO tbl_book_genres (genre_id,bookId) VALUES (?,?);";
-		PreparedStatement stmt5 = conn.prepareStatement(query5);
-		stmt5.setInt(1, genreId);
-		stmt5.setInt(2, bookId);
-		stmt5.executeUpdate();
+		query = "INSERT INTO tbl_book_genres (genre_id,bookId) VALUES (?,?);";
+		stmt = conn.prepareStatement(query);
+		stmt.setInt(1, genreId);
+		stmt.setInt(2, bookId);
+		stmt.executeUpdate();
 		System.out.println("Successfully hooked up book and its genre");
 	}
-	
-	//Helper Methods for creating new entries
-	public int chooseGenre(Connection conn) throws SQLException {
 
+	// Helper Methods for creating new entries
+	public static int chooseGenre(Connection conn) throws SQLException {
+
+		ArrayList<String> genreNames = new ArrayList<String>();
+		
 		String query = "SELECT genre_name FROM tbl_genre;";
 		PreparedStatement stmt = conn.prepareStatement(query);
 		ResultSet rset = stmt.executeQuery();
 
-		ArrayList<String> genreNames = new ArrayList<String>();
-		
+
+
 		String genreName = "";
 		int i = 1;
 		while (rset.next()) {
@@ -346,27 +387,31 @@ public class Administrator implements Serializable {
 			in.nextLine();
 			if (userInput < 1 || userInput == i || userInput > i) {
 				userInput = 0;
+				
 				return userInput;
 			}
 		} catch (Exception e) {
+			
 			System.out.println("Please enter an integer");
+			return 0;
 		}
 
-		
-		 query = "SELECT genre_id FROM tbl_genre WHERE genre_name = ?;";
-		 stmt = conn.prepareStatement(query);
-		 stmt.setString(1, genreNames.get(userInput-1));
-		 rset = stmt.executeQuery();
-		
-		 int genId = 0;
-		 while(rset.next()) {
-			 genId = rset.getInt(1);
-		 }
+		query = "SELECT genre_id FROM tbl_genre WHERE genre_name = ?;";
+		stmt = conn.prepareStatement(query);
+		stmt.setString(1, genreNames.get(userInput - 1));
+		rset = stmt.executeQuery();
+
+		int genId = 0;
+		while (rset.next()) {
+			genId = rset.getInt(1);
+		}
+
 		
 		return genId;
 
 	}
-	public int choosePub(Connection conn) throws SQLException {
+
+	public static int choosePub(Connection conn) throws SQLException {
 
 		System.out.println("Please select the publisher:");
 
@@ -375,8 +420,7 @@ public class Administrator implements Serializable {
 		ResultSet rset = stmt.executeQuery();
 
 		ArrayList<String> publisherNames = new ArrayList<String>();
-		
-		
+
 		String publishName = "";
 		int i = 1;
 		while (rset.next()) {
@@ -395,26 +439,27 @@ public class Administrator implements Serializable {
 			in.nextLine();
 			if (userInput < 1 || userInput == i || userInput > i) {
 				userInput = 0;
+				
 				return userInput;
 			}
 		} catch (Exception e) {
 			System.out.println("Please enter an integer");
 		}
 
-		
-		 query = "SELECT publisherId FROM tbl_publisher WHERE publisherName = ?;";
-		 stmt = conn.prepareStatement(query);
-		 stmt.setString(1, publisherNames.get(userInput-1));
-		 rset = stmt.executeQuery();
-		
-		 int pubId = 0;
-		 while(rset.next()) {
-			 pubId = rset.getInt(1);
-		 }
+		query = "SELECT publisherId FROM tbl_publisher WHERE publisherName = ?;";
+		stmt = conn.prepareStatement(query);
+		stmt.setString(1, publisherNames.get(userInput - 1));
+		rset = stmt.executeQuery();
+
+		int pubId = 0;
+		while (rset.next()) {
+			pubId = rset.getInt(1);
+		}
 		
 		return pubId;
 	}
-	public int chooseAuthor(Connection conn) throws SQLException {
+
+	public static int chooseAuthor(Connection conn) throws SQLException {
 
 		System.out.println("Please select the author of the book:");
 
@@ -442,27 +487,29 @@ public class Administrator implements Serializable {
 			in.nextLine();
 			if (userInput < 1 || userInput == i || userInput > i) {
 				userInput = 0;
+				
 			}
 		} catch (Exception e) {
+			
 			System.out.println("Please enter an integer");
 		}
 
-		String query2 = "SELECT authorId FROM tbl_author WHERE authorName = ?;";
-		PreparedStatement stmt2 = conn.prepareStatement(query2);
-		stmt2.setString(1, authors.get(userInput - 1));
-		ResultSet rset2 = stmt2.executeQuery();
+		query = "SELECT authorId FROM tbl_author WHERE authorName = ?;";
+		stmt = conn.prepareStatement(query);
+		stmt.setString(1, authors.get(userInput - 1));
+		ResultSet rset2 = stmt.executeQuery();
 
 		int result = 0;
 		while (rset2.next()) {
 			result = rset2.getInt(1);
 		}
-
+		
 		return result;
 
 	}
-	
-	//Update Methods for entries
-	public void updateGenre(int userChoice, String newGenre, Connection conn) throws SQLException {
+
+	// Update Methods for entries
+	public static void updateGenre(int userChoice, String newGenre, Connection conn) throws SQLException {
 		String query = "UPDATE tbl_genre SET genre_name = ? WHERE genre_id = ?";
 		PreparedStatement stmt = conn.prepareStatement(query);
 		stmt.setString(1, newGenre);
@@ -470,11 +517,12 @@ public class Administrator implements Serializable {
 		stmt.executeUpdate();
 		System.out.println("Genre Name Succesfully updated");
 	}
-	public void updateBranch(String newName, String newAddress, int choice, Connection conn) throws SQLException {
+
+	public static void updateBranch(String newName, String newAddress, int choice, Connection conn) throws SQLException {
 		Statement stmt = conn.createStatement();
 		ResultSet rset = stmt.executeQuery("select * from tbl_library_branch");
 
-		ArrayList<Integer> branchIds = new ArrayList<Integer>();
+
 		ArrayList<String> branchName = new ArrayList<String>();
 		ArrayList<String> location = new ArrayList<String>();
 
@@ -507,7 +555,8 @@ public class Administrator implements Serializable {
 		stmt2.executeUpdate();
 
 	}
-	public void updateBorrower(Connection conn) throws SQLException {
+
+	public static void updateBorrower(Connection conn) throws SQLException {
 
 		ArrayList<String> names = new ArrayList<String>();
 		ArrayList<String> addresses = new ArrayList<String>();
@@ -524,7 +573,6 @@ public class Administrator implements Serializable {
 
 		System.out.println("Please choose a borrower to update:");
 
-		int i = 0;
 		while (rset.next()) {
 			name = rset.getString(1);
 			address = rset.getString(2);
@@ -546,9 +594,11 @@ public class Administrator implements Serializable {
 			userChoice = in.nextInt();
 			in.nextLine();
 			if (userChoice < 1 || userChoice >= k + 1) {
+				
 				return;
 			}
 		} catch (Exception e) {
+			
 			System.out.println("Please enter an integer");
 			return;
 		}
@@ -584,23 +634,24 @@ public class Administrator implements Serializable {
 		stmt2.executeUpdate();
 
 		System.out.println("Sucessfully updated borrower details");
-
+		
 	}
+
 	public static void updateAuthor(int userChoice, int oldAuth, Connection conn) throws SQLException {
 
-		
-		int toReplaceAuthId = getAuthId(oldAuth,conn);
-		int bookId = getBookId(oldAuth,conn);
-		
-		String query5 = "UPDATE tbl_book_authors SET authorId = ? WHERE authorId = ? AND bookId = ?";
-		PreparedStatement stmt5 = conn.prepareStatement(query5);
-		stmt5.setInt(1, userChoice);
-		stmt5.setInt(2, toReplaceAuthId);
-		stmt5.setInt(3, bookId);
-		stmt5.executeUpdate();
+		int toReplaceAuthId = getAuthId(oldAuth, conn);
+		int bookId = getBookId(oldAuth, conn);
+
+		String query = "UPDATE tbl_book_authors SET authorId = ? WHERE authorId = ? AND bookId = ?";
+		PreparedStatement stmt = conn.prepareStatement(query);
+		stmt.setInt(1, userChoice);
+		stmt.setInt(2, toReplaceAuthId);
+		stmt.setInt(3, bookId);
+		stmt.executeUpdate();
 		System.out.println("Sucessfully updated name of author");
 
 	}
+
 	public static void updatePub(int choice, String newName, String newAddress, String newPhoneNumber, Connection conn)
 			throws SQLException {
 		String query = "UPDATE tbl_publisher SET publisherName = ? , publisherAddress = ?, publisherPhone = ? WHERE publisherId = ?";
@@ -612,6 +663,7 @@ public class Administrator implements Serializable {
 		stmt.executeUpdate();
 
 	}
+
 	public static void updateTitle(int userChoice, String newTitle, Connection conn) throws SQLException {
 		Statement stmt = conn.createStatement();
 		ResultSet rset = stmt.executeQuery("SELECT title FROM tbl_book");
@@ -622,29 +674,27 @@ public class Administrator implements Serializable {
 		ArrayList<String> titles = new ArrayList<String>();
 		ArrayList<String> authors = new ArrayList<String>();
 
-		int i = 1;
+		
 		while (rset.next()) {
 			String title = rset.getString(1);
 			titles.add(title);
-			i++;
+		
 		}
 
 		while (rset2.next()) {
 			String author = rset2.getString(1);
 			authors.add(author);
 		}
-		
-		
-		 String query3 = "SELECT bookId FROM tbl_book WHERE title =?";
-		 PreparedStatement stmt3 = conn.prepareStatement(query3);
-		 stmt3.setString(1, titles.get(userChoice-1));
-		 ResultSet rs = stmt3.executeQuery();
-		 
-		 int bookId = 0;
-		 while(rs.next()) {
-			 bookId = rs.getInt(1);
-		 }
-		
+
+		String query3 = "SELECT bookId FROM tbl_book WHERE title =?";
+		PreparedStatement stmt3 = conn.prepareStatement(query3);
+		stmt3.setString(1, titles.get(userChoice - 1));
+		ResultSet rs = stmt3.executeQuery();
+
+		int bookId = 0;
+		while (rs.next()) {
+			bookId = rs.getInt(1);
+		}
 
 		String query = "UPDATE tbl_book SET title = ? WHERE bookId = ?";
 		PreparedStatement stmt4 = conn.prepareStatement(query);
@@ -652,17 +702,86 @@ public class Administrator implements Serializable {
 		stmt4.setInt(2, bookId);
 		stmt4.executeUpdate();
 		System.out.println("Sucessfully updated name of book");
-	
-		
 
 	}
+
+	public static void updateBookGenre(int newGenreId, int userChoice , Connection conn) throws SQLException {
+
+		Statement stmt = conn.createStatement();
+		ResultSet rset = stmt.executeQuery("SELECT title FROM tbl_book");
+		
+		ArrayList<String> titles = new ArrayList<String>();
+		
 	
-	//Delete Methods for entries
-	public void deleteGenre(int userChoice, Connection conn) throws SQLException {
+		while (rset.next()) {
+			String title = rset.getString(1);
+			titles.add(title);
+		
+		}
+		
+		String query = "SELECT bookId FROM tbl_book WHERE title = ?;";
+		PreparedStatement stmt2 = conn.prepareStatement(query);
+		stmt2.setString(1, titles.get(userChoice-1));
+		rset = stmt2.executeQuery();
+
+		int bookId = 1;
+		while (rset.next()) {
+			bookId = rset.getInt(1);
+		}
+		
+		
+		
+		query = "UPDATE tbl_book_genres SET genre_id = ? WHERE bookId = ?;";
+		stmt2 = conn.prepareStatement(query);
+		stmt2.setInt(1, newGenreId);
+		stmt2.setInt(2, bookId);
+		stmt2.executeUpdate();
+		
+		
+		System.out.println("Book genre updated");
+	}
+
+
+	public static void updateBookPub(int newPubId, int userChoice , Connection conn) throws SQLException {
+
+		Statement stmt = conn.createStatement();
+		ResultSet rset = stmt.executeQuery("SELECT title FROM tbl_book");
+		
+		ArrayList<String> titles = new ArrayList<String>();
+		
+		
+		while (rset.next()) {
+			String title = rset.getString(1);
+			titles.add(title);
+			
+		}
+		
+		String query = "SELECT bookId FROM tbl_book WHERE title = ?;";
+		PreparedStatement stmt2 = conn.prepareStatement(query);
+		stmt2.setString(1, titles.get(userChoice-1));
+		rset = stmt2.executeQuery();
+
+		int bookId = 1;
+		while (rset.next()) {
+			bookId = rset.getInt(1);
+		}
+		
+		
+		
+		query = "UPDATE tbl_book SET pubId = ? WHERE bookId = ?;";
+		stmt2 = conn.prepareStatement(query);
+		stmt2.setInt(1, newPubId);
+		stmt2.setInt(2, bookId);
+		stmt2.executeUpdate();
+		
+		
+		System.out.println("Book genre updated");
+	}
+	// Delete Methods for entries
+	public  static void deleteGenre(int userChoice, Connection conn) throws SQLException {
 		String query = "SELECT genre_name FROM tbl_genre;";
 		PreparedStatement stmt = conn.prepareStatement(query);
 		ResultSet rset = stmt.executeQuery();
-
 
 		ArrayList<Integer> bookIds = new ArrayList<Integer>();
 		query = "SELECT bookId FROM tbl_book_genres WHERE genre_id = ?;";
@@ -727,7 +846,8 @@ public class Administrator implements Serializable {
 		System.out.println("Genre succesfully removed drom tbl_book_genres");
 
 	}
-	public void deleteBranch(int userChoice, Connection conn) throws SQLException {
+
+	public static void deleteBranch(int userChoice, Connection conn) throws SQLException {
 		ArrayList<String> branchNames = new ArrayList<String>();
 
 		String query = "SELECT branchName FROM tbl_library_branch;";
@@ -766,36 +886,24 @@ public class Administrator implements Serializable {
 		}
 
 		for (int i = 0; i < bookIds.size(); i++) {
-			String query6 = "DELETE FROM tbl_book_genres WHERE bookId = ?";
-			PreparedStatement stmt2 = conn.prepareStatement(query6);
-			stmt2.setInt(1, bookIds.get(i));
-			stmt2.executeUpdate();
-			System.out.println("Book succesfully removed drom tbl_book_genres");
 
-			String query2 = "DELETE FROM tbl_book_loans WHERE bookId = ?";
+			String query2 = "DELETE FROM tbl_book_loans WHERE bookId = ? AND branchId = ?";
 			PreparedStatement stmt3 = conn.prepareStatement(query2);
 			stmt3.setInt(1, bookIds.get(i));
+			stmt3.setInt(2, branchId);
 			stmt3.executeUpdate();
 			System.out.println("Book succesfully removed drom tbl_book_loans");
 
-			String query3 = "DELETE FROM tbl_book_copies WHERE bookId = ?";
+			String query3 = "DELETE FROM tbl_book_copies WHERE bookId = ? AND branchId = ?";
 			PreparedStatement stmt4 = conn.prepareStatement(query3);
 			stmt4.setInt(1, bookIds.get(i));
+			stmt4.setInt(2, branchId);
 			stmt4.executeUpdate();
 			System.out.println("Book succesfully removed drom tbl_book_copies");
 
-			String query4 = "DELETE FROM tbl_book_authors WHERE bookId = ?";
-			PreparedStatement stmt5 = conn.prepareStatement(query4);
-			stmt5.setInt(1, bookIds.get(i));
-			stmt5.executeUpdate();
-			System.out.println("Book succesfully removed drom tbl_book_authors");
+	
 
-			String query5 = "DELETE FROM tbl_book WHERE bookId = ?";
-			PreparedStatement stmt6 = conn.prepareStatement(query5);
-			stmt6.setInt(1, bookIds.get(i));
-			stmt6.executeUpdate();
-			System.out.println("Book succesfully removed drom tbl_book");
-			System.out.println("Book sucessfully removed");
+			System.out.println("Book copies and loans sucessfully removed");
 		}
 
 		query = "DELETE FROM tbl_library_branch  WHERE branchId = ?";
@@ -805,9 +913,8 @@ public class Administrator implements Serializable {
 		System.out.println("Branch Successfully deleted");
 
 	}
-	public void deletePub(int publishId, Connection conn) throws SQLException {
 
-	
+	public static void deletePub(int publishId, Connection conn) throws SQLException {
 
 		String query = "SELECT bookId FROM tbl_book WHERE pubId = ?";
 		PreparedStatement stmt1 = conn.prepareStatement(query);
@@ -863,6 +970,7 @@ public class Administrator implements Serializable {
 		System.out.println("Publisher succesfully removed drom tbl_publisher");
 
 	}
+
 	public static void deleteBook(int userChoice, Connection conn) throws SQLException {
 
 		Statement stmt = conn.createStatement();
@@ -871,11 +979,10 @@ public class Administrator implements Serializable {
 		ArrayList<String> titles = new ArrayList<String>();
 		ArrayList<Integer> bookIds = new ArrayList<Integer>();
 
-		int i = 1;
 		while (rset.next()) {
 			String title = rset.getString(1);
 			titles.add(title);
-			i++;
+			
 		}
 
 		for (int q = 0; q < titles.size(); q++) {
@@ -916,6 +1023,7 @@ public class Administrator implements Serializable {
 		System.out.println("Book sucessfully removed");
 
 	}
+
 	public static void deleteAuth(int userChoice, Connection conn) throws SQLException {
 		Statement stmt = conn.createStatement();
 		ResultSet rset = stmt.executeQuery("SELECT authorName FROM tbl_author;");
@@ -1001,6 +1109,7 @@ public class Administrator implements Serializable {
 		System.out.println("Book succesfully removed from tbl_author");
 
 	}
+
 	public static void deleteBorrower(Connection conn) throws SQLException {
 		ArrayList<String> names = new ArrayList<String>();
 		ArrayList<String> addresses = new ArrayList<String>();
@@ -1017,7 +1126,7 @@ public class Administrator implements Serializable {
 
 		System.out.println("Please choose a borrower to delete:");
 
-		int i = 0;
+	
 		while (rset.next()) {
 			name = rset.getString(1);
 			address = rset.getString(2);
@@ -1039,10 +1148,12 @@ public class Administrator implements Serializable {
 			userChoice = in.nextInt();
 			in.nextLine();
 			if (userChoice < 1 || userChoice >= k + 1) {
+				
 				return;
 			}
 		} catch (Exception e) {
 			System.out.println("Please enter an integer");
+			
 			return;
 		}
 
@@ -1070,13 +1181,10 @@ public class Administrator implements Serializable {
 		stmt2.setInt(1, cardNoToUpdate);
 		stmt2.executeUpdate();
 		System.out.println("Borrower  deleted from tbl_borrower");
-
+		
 	}
 
-	
-
-
-	//Methods for printing large amounts of data
+	// Methods for printing large amounts of data
 	public static int printOutAllAuthors(Connection conn) throws SQLException {
 
 		Statement stmt2 = conn.createStatement();
@@ -1101,6 +1209,7 @@ public class Administrator implements Serializable {
 		System.out.println(j + 1 + ": " + "Quit to previous");
 		return authors.size();
 	}
+
 	public static int printOutAllBooks(Connection conn) throws SQLException {
 
 		Statement stmt = conn.createStatement();
@@ -1124,7 +1233,7 @@ public class Administrator implements Serializable {
 			authors.add(author);
 		}
 
-		int j = 0;
+
 		for (int q = 0; q < titles.size(); q++) {
 			System.out.print(q + 1 + ": " + titles.get(q) + ", by ");
 			System.out.println(findAuthorWithTitle(titles.get(q), conn));
@@ -1134,7 +1243,8 @@ public class Administrator implements Serializable {
 
 		return titles.size();
 	}
-	public void showAllBooksInfo(Connection conn) throws SQLException {
+
+	public static void showAllBooksInfo(Connection conn) throws SQLException {
 
 		ArrayList<String> titles = new ArrayList<String>();
 		ArrayList<String> authors = new ArrayList<String>();
@@ -1185,7 +1295,7 @@ public class Administrator implements Serializable {
 				authorIds.add(rs.getInt(1));
 			}
 		}
-		
+
 		for (int i = 0; i < titles.size(); i++) {
 			query = "SELECT genre_id FROM tbl_book_genres WHERE bookId = ?";
 			stmt = conn.prepareStatement(query);
@@ -1195,7 +1305,7 @@ public class Administrator implements Serializable {
 				genreIds.add(rs.getInt(1));
 			}
 		}
-		
+
 		for (int i = 0; i < authorIds.size(); i++) {
 			query = "SELECT authorName FROM tbl_author WHERE authorId = ?";
 			stmt = conn.prepareStatement(query);
@@ -1205,7 +1315,7 @@ public class Administrator implements Serializable {
 				authors.add(rs.getString(1));
 			}
 		}
-		
+
 		for (int i = 0; i < genreIds.size(); i++) {
 			query = "SELECT genre_name FROM tbl_genre WHERE genre_id = ?";
 			stmt = conn.prepareStatement(query);
@@ -1215,7 +1325,7 @@ public class Administrator implements Serializable {
 				genres.add(rs.getString(1));
 			}
 		}
-		
+
 		for (int i = 0; i < pubIds.size(); i++) {
 			query = "SELECT publisherName FROM tbl_publisher WHERE publisherId = ?";
 			stmt = conn.prepareStatement(query);
@@ -1225,34 +1335,35 @@ public class Administrator implements Serializable {
 				publishers.add(rs.getString(1));
 			}
 		}
-		
+
 		int i = 0;
 		for (i = 0; i < titles.size(); i++) {
-			System.out.println(i+1 + " :" + titles.get(i) + ", by " + authors.get(i) + " Genre: " + genres.get(i) + " Published by: " + publishers.get(i) + ".");
+			System.out.println(i + 1 + " :" + titles.get(i) + ", by " + authors.get(i) + " Genre: " + genres.get(i)
+					+ " Published by: " + publishers.get(i) + ".");
 		}
-		
-		System.out.println(i+1 + ": Exit to previous");
-		
-		
+
+		System.out.println(i + 1 + ": Exit to previous");
+
 		Scanner in = new Scanner(System.in);
 		int userInput = 0;
 		try {
 			userInput = in.nextInt();
 			in.nextLine();
-			if(userInput == i+1) {
+			if (userInput == i + 1) {
+				
 				return;
 			}
-		}catch(Exception e) {
+		} catch (Exception e) {
 			System.out.println("Please enter an integer");
+			
 			return;
 		}
-
+		
 		System.out.println("Book succesfully added to tbl_book");
 
 	}
-	
-	
-	//Useful helper method 
+
+	// Useful helper method
 	public static int getAuthId(int userChoice, Connection conn) throws SQLException {
 
 		Statement stmt = conn.createStatement();
@@ -1261,11 +1372,11 @@ public class Administrator implements Serializable {
 		ArrayList<String> titles = new ArrayList<String>();
 		ArrayList<String> authorNames = new ArrayList<String>();
 
-		int i = 1;
+		
 		while (rset.next()) {
 			String title = rset.getString(1);
 			titles.add(title);
-			i++;
+		
 		}
 
 		for (int q = 0; q < titles.size(); q++) {
@@ -1285,6 +1396,7 @@ public class Administrator implements Serializable {
 
 		return authId;
 	}
+
 	public static int returnBookId(String searchTitle, Connection conn) throws SQLException {
 		int bookId = 0;
 		String query = "SELECT bookId FROM tbl_book WHERE title =?";
@@ -1299,6 +1411,7 @@ public class Administrator implements Serializable {
 
 		return bookId;
 	}
+
 	public static String findAuthorWithTitle(String title, Connection conn) throws SQLException {
 
 		int bookIdHolder = returnBookId(title, conn);
@@ -1326,6 +1439,7 @@ public class Administrator implements Serializable {
 		}
 		return authorName;
 	}
+
 	public static int getNumBranches(Connection conn) throws SQLException {
 
 		Statement stmt = conn.createStatement();
@@ -1337,6 +1451,7 @@ public class Administrator implements Serializable {
 
 		return numbBranches;
 	}
+
 	public static <T> ArrayList<T> removeDuplicates(ArrayList<T> list) {
 
 		ArrayList<T> newList = new ArrayList<T>();
@@ -1351,6 +1466,7 @@ public class Administrator implements Serializable {
 		// return the new list
 		return newList;
 	}
+
 	public static int getBookId(int bookChoice, Connection conn) throws SQLException {
 		Statement stmt = conn.createStatement();
 		ResultSet rset = stmt.executeQuery("SELECT title FROM tbl_book");
@@ -1361,11 +1477,11 @@ public class Administrator implements Serializable {
 		ArrayList<String> titles = new ArrayList<String>();
 		ArrayList<String> authors = new ArrayList<String>();
 
-		int i = 1;
+	
 		while (rset.next()) {
 			String title = rset.getString(1);
 			titles.add(title);
-			i++;
+	
 		}
 
 		while (rset2.next()) {
@@ -1375,18 +1491,18 @@ public class Administrator implements Serializable {
 
 		String query = "SELECT bookId FROM tbl_book WHERE title = ?";
 		PreparedStatement stmt5 = conn.prepareStatement(query);
-		stmt5.setString(1, titles.get(bookChoice-1));
+		stmt5.setString(1, titles.get(bookChoice - 1));
 		rset = stmt5.executeQuery();
-		
+
 		int bookId = 0;
-		while(rset.next()) {
+		while (rset.next()) {
 			bookId = rset.getInt(1);
 		}
-		
 
 		return bookId;
-		
+
 	}
+
 	public static String bookIdtoString(int bookId, Connection conn) throws SQLException {
 
 		String query = "SELECT title FROM tbl_book WHERE bookId = ?;";
@@ -1400,6 +1516,7 @@ public class Administrator implements Serializable {
 
 		return title;
 	}
+
 	public static String branchIdtoString(int branchId, Connection conn) throws SQLException {
 
 		String query = "SELECT branchName FROM tbl_library_branch WHERE branchId = ?;";
@@ -1413,6 +1530,7 @@ public class Administrator implements Serializable {
 
 		return branch;
 	}
+
 	public void readBorrower(Connection conn) throws SQLException {
 		ArrayList<String> names = new ArrayList<String>();
 		ArrayList<String> addresses = new ArrayList<String>();
@@ -1427,7 +1545,7 @@ public class Administrator implements Serializable {
 
 		Scanner in = new Scanner(System.in);
 
-		int i = 0;
+	
 		while (rset.next()) {
 			name = rset.getString(1);
 			address = rset.getString(2);
@@ -1449,15 +1567,18 @@ public class Administrator implements Serializable {
 			userChoice = in.nextInt();
 			in.nextLine();
 			if (userChoice < 1 || userChoice >= k + 1) {
+				
 				return;
 			}
 		} catch (Exception e) {
 			System.out.println("Please enter an integer");
+			
 			return;
 		}
+		
 	}
 
-	//Override due date method
+	// Override due date method
 	public void OverrideDueDate(Connection conn) throws SQLException {
 
 		System.out.println("Please select the account to override");
@@ -1578,5 +1699,4 @@ public class Administrator implements Serializable {
 
 	}
 
-	
 }
