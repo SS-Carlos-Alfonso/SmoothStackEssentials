@@ -8,12 +8,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 import oracle.sql.*;
 import oracle.jdbc.driver.*;
 
 //Singleton Class representation of Librarian
-public class Librarian implements Serializable {
+public class Librarian {
 	public static volatile Librarian lSoleInstance;
 
 	private Librarian() {
@@ -39,7 +40,7 @@ public class Librarian implements Serializable {
 		return getInstance();
 	}
 
-	public static void updateBranchDetails(String branchName1, String location, String newName, String newLocation,
+	public  void updateBranchDetails(String branchName1, String location, String newName, String newLocation,
 			Connection conn) throws SQLException {
 
 		if (newName == "") {
@@ -72,7 +73,7 @@ public class Librarian implements Serializable {
 
 	}
 
-	public static int returnBookId(String searchTitle, Connection conn) throws SQLException {
+	public  int returnBookId(String searchTitle, Connection conn) throws SQLException {
 		int bookId = 0;
 
 		String query = "SELECT bookId FROM tbl_book WHERE title =?";
@@ -88,7 +89,7 @@ public class Librarian implements Serializable {
 		return bookId;
 	}
 
-	public static String findAuthorWithTitle(String title, Connection conn) throws SQLException {
+	public  String findAuthorWithTitle(String title, Connection conn) throws SQLException {
 
 		int bookIdHolder = returnBookId(title, conn);
 
@@ -117,9 +118,9 @@ public class Librarian implements Serializable {
 		return authorName;
 	}
 
-	public static int displayBooks(Connection conn) throws SQLException {
+	public  int displayBooks(Connection conn) throws SQLException {
 
-		// TODO MAKE THIS INTO A METHOD
+		
 		Statement stmt = conn.createStatement();
 		ResultSet rset = stmt.executeQuery("SELECT title FROM tbl_book");
 
@@ -128,6 +129,8 @@ public class Librarian implements Serializable {
 
 		ArrayList<String> titles = new ArrayList<String>();
 		ArrayList<String> authors = new ArrayList<String>();
+		
+		Scanner in = new Scanner(System.in);
 
 		int i = 1;
 		while (rset.next()) {
@@ -147,11 +150,33 @@ public class Librarian implements Serializable {
 		}
 
 		System.out.println(i + ": " + "Quit to previous");
+		
+		int copiesChoice = 0;
+		try {
+			copiesChoice = in.nextInt();
+			in.nextLine();
+			if(copiesChoice <= 0 || copiesChoice >= i) {
+				return 0;
+			}
+		} catch (Exception e) {
+			System.out.println("Please enter a integer");
+		}
+		
+		String query = "SELECT bookId FROM tbl_book WHERE title = ?";
+		PreparedStatement stmt3 = conn.prepareStatement(query);
+		stmt3.setString(1, titles.get(copiesChoice-1));
+		ResultSet rs = stmt3.executeQuery();
 
-		return titles.size();
+		int bookIdToReturn = 0;
+		while (rs.next()) {
+			bookIdToReturn = rs.getInt(1);
+		
+		}
+		
+		return bookIdToReturn;
 	}
 
-	public static int choiceToBookId(int choice, int branchId, Connection conn) throws SQLException {
+	public  int choiceToBookId(int choice, int branchId, Connection conn) throws SQLException {
 		ArrayList<Integer> bookIds = new ArrayList<Integer>();
 
 		String query = "SELECT bookId FROM tbl_book_copies WHERE branchId = ?;";
@@ -180,13 +205,13 @@ public class Librarian implements Serializable {
 		return bookId;
 	}
 
-	public static void getNumCopies(int bookId, int branchId, Connection conn) throws SQLException {
+	public  void getNumCopies(int bookId, int branchId, Connection conn) throws SQLException {
 
 		String query = "SELECT noOfCopies FROM tbl_book_copies WHERE bookId = ? AND branchID = ?;";
 		PreparedStatement stmt = conn.prepareStatement(query);
 
 		// Need to change bookId to bookId not user selection
-		stmt.setInt(1, choiceToBookId(bookId, branchId, conn));
+		stmt.setInt(1, bookId);
 		stmt.setInt(2, branchId);
 
 		ResultSet rs = stmt.executeQuery();
@@ -199,13 +224,13 @@ public class Librarian implements Serializable {
 
 	}
 
-	public static void updateNumCopies(int bookId, int branchId, int newNumOfCopies, Connection conn)
+	public void updateNumCopies(int bookId, int branchId, int newNumOfCopies, Connection conn)
 			throws SQLException {
 
 		String query = "UPDATE tbl_book_copies SET noOfCopies = ? WHERE bookId = ? AND branchID = ?";
 		PreparedStatement stmt = conn.prepareStatement(query);
 		stmt.setInt(1, newNumOfCopies);
-		stmt.setInt(2, choiceToBookId(bookId, branchId, conn));
+		stmt.setInt(2, bookId);
 		stmt.setInt(3, branchId);
 
 		stmt.executeUpdate();
