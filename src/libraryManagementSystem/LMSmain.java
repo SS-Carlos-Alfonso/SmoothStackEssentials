@@ -89,6 +89,10 @@ public class LMSmain {
 		boolean repeat_bookOrAuth = true;
 		boolean repeat_crudGenre = true;
 
+		Librarian lib = Librarian.getInstance();
+		Administrator adm = Administrator.getInstance();
+		Borrower bor = Borrower.getInstance();
+		
 		while (true) {
 
 			category = printMainMenu();
@@ -141,7 +145,7 @@ public class LMSmain {
 								// Save information on choice and open LIB3
 								repeat_lib3 = true;
 								while (repeat_lib3) {
-									Librarian lib = Librarian.getInstance();
+								
 									int lib3_choice = 0;
 									lib3_choice = printLIB3();
 									if (lib3_choice == 1) {
@@ -214,17 +218,11 @@ public class LMSmain {
 											System.out
 													.println("Pick the Book you want to add copies of to your branch:");
 
-											int size = lib.displayBooks(conn);
-											int copiesChoice = 0;
-											try {
-												copiesChoice = in.nextInt();
-												in.nextLine();
-											} catch (Exception e) {
-												System.out.println("Please enter a integer");
-											}
+											int bookId = lib.displayBooks(conn);
+										
 
-											if (copiesChoice < size + 1) {
-												lib.getNumCopies(copiesChoice, branchChoice, conn);
+											if (bookId != 0) {
+												lib.getNumCopies(bookId, branchId.get(branchChoice-1), conn);
 
 												System.out.println("Enter new number of copies: ");
 												int newNumCopies = 0;
@@ -236,12 +234,12 @@ public class LMSmain {
 													System.out.println("Please enter an integer");
 												}
 
-												lib.updateNumCopies(copiesChoice, branchChoice, newNumCopies, conn);
+												lib.updateNumCopies(bookId, branchId.get(branchChoice-1), newNumCopies, conn);
 
 												repeat_lib3_option2 = false;
 												break;
 
-											} else if (copiesChoice == size + 1) {
+											} else if (bookId == 0) {
 												repeat_lib3_option2 = false;
 												break;
 											} else {
@@ -283,7 +281,7 @@ public class LMSmain {
 
 			case 2:
 				repeat_admin = true;
-				Administrator adm = Administrator.getInstance();
+				
 				int admChoice = 0;
 				while (repeat_admin) {
 
@@ -395,7 +393,9 @@ public class LMSmain {
 								System.out.println("What would you like to update?:");
 								System.out.println("1: Update title");
 								System.out.println("2: Update author");
-								System.out.println("3: Quit to previous");
+								System.out.println("3: Update genre");
+								System.out.println("4: Update publisher");
+								System.out.println("5: Quit to previous");
 
 								int updateChoice = 0;
 								try {
@@ -421,9 +421,24 @@ public class LMSmain {
 
 									adm.updateAuthor(authId, updateSelection, conn);
 									break;
-								} else {
+								} else if(updateChoice == 3){
+									int newGenreId = 0;
+									System.out.println("Please select a new genre");
+									newGenreId = adm.chooseGenre(conn);
+									adm.updateBookGenre(newGenreId, updateSelection, conn);
+									
+									break;
+								}else if(updateChoice == 4) {
+									int newPubId = 0;
+									System.out.println("Please select a new publisher");
+									newPubId = adm.choosePub(conn);
+									adm.updateBookPub(newPubId, updateSelection, conn);
+									
+									break;
+								}else {
 									break;
 								}
+								
 							case 3: // Delete a book/author
 
 								System.out.println("What would you like to delete?");
@@ -1000,7 +1015,6 @@ public class LMSmain {
 				break;
 			case 3:
 				repeat_borrow = true;
-				Borrower bor = Borrower.getInstance();
 				while (repeat_borrow) {
 					int cardNo = 0;
 					System.out.println("Enter your card Number - type 0 to exit");
@@ -1070,11 +1084,13 @@ public class LMSmain {
 								}
 
 								bor.checkOutBook(bookChoice, option1_choice, cardNo, conn);
+								System.out.println("Book successfully checked out");
 								continue;
 
 							} else if (boor1Choice == 2) {
 
 								bor.returnBook(cardNo, conn);
+								System.out.println("Book successfully returned");
 
 							} else if (boor1Choice == 3) {
 								repeat_Borr1 = false;
