@@ -16,7 +16,7 @@ import oracle.sql.*;
 import oracle.jdbc.driver.*;
 import java.util.*;
 
-public class Borrower implements Serializable {
+public class Borrower {
 	public static volatile Borrower BSoleInstance;
 
 	private Borrower() {
@@ -42,7 +42,7 @@ public class Borrower implements Serializable {
 		return getInstance();
 	}
 
-	public static boolean checkCardNo(int cardNo, Connection conn) throws SQLException {
+	public boolean checkCardNo(int cardNo, Connection conn) throws SQLException {
 
 		String query = "SELECT COUNT(*) FROM tbl_borrower WHERE cardNo =?";
 		PreparedStatement stmt = conn.prepareStatement(query);
@@ -62,7 +62,7 @@ public class Borrower implements Serializable {
 
 	}
 
-	public static int getNumBranches(Connection conn) throws SQLException {
+	public int getNumBranches(Connection conn) throws SQLException {
 
 		Statement stmt = conn.createStatement();
 		ResultSet rset = stmt.executeQuery("SELECT COUNT(DISTINCT branchId) from tbl_library_branch");
@@ -74,7 +74,7 @@ public class Borrower implements Serializable {
 		return numbBranches;
 	}
 
-	public static int printBranches(Connection conn) throws SQLException {
+	public int printBranches(Connection conn) throws SQLException {
 
 		Statement stmt = conn.createStatement();
 		ResultSet rset = stmt.executeQuery("select * from tbl_library_branch");
@@ -112,7 +112,7 @@ public class Borrower implements Serializable {
 		return branchChoice;
 	}
 
-	public static int showBooksInBranch(int userOption, Connection conn) throws SQLException {
+	public int showBooksInBranch(int userOption, Connection conn) throws SQLException {
 
 		ArrayList<Integer> bookIds = new ArrayList<Integer>();
 		ArrayList<Integer> authorIds = new ArrayList<Integer>();
@@ -242,7 +242,7 @@ public class Borrower implements Serializable {
 		return branch;
 	}
 
-	public static void checkOutBook(int bookChoice, int branch, int cardNo, Connection conn) throws SQLException {
+	public void checkOutBook(int bookChoice, int branch, int cardNo, Connection conn) throws SQLException {
 		ArrayList<Integer> bookIds = new ArrayList<Integer>();
 		ArrayList<Integer> branchIds = new ArrayList<Integer>();
 
@@ -284,7 +284,7 @@ public class Borrower implements Serializable {
 
 	}
 
-	public static boolean checkIfAlreadyOut(int bookChoice, int branch, int cardNo, Connection conn)
+	public boolean checkIfAlreadyOut(int bookChoice, int branch, int cardNo, Connection conn)
 			throws SQLException {
 
 		ArrayList<Integer> branchIds = new ArrayList<Integer>();
@@ -320,7 +320,7 @@ public class Borrower implements Serializable {
 
 	}
 
-	public static void returnBook(int cardNo, Connection conn) throws SQLException {
+	public void returnBook(int cardNo, Connection conn) throws SQLException {
 
 		Scanner in = new Scanner(System.in);
 		String query = "SELECT * FROM tbl_book_loans WHERE cardNo = ? AND dateIn IS NULL";
